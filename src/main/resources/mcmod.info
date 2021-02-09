@@ -1,0 +1,10 @@
+[
+{
+  "modid": "groovy-libraries",
+  "name": "Groovy Libraries",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "authorList": ["latibro"],
+  "credits": "Apache Groovy"
+}
+]
