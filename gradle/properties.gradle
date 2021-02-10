@@ -1,0 +1,25 @@
+project.ext {
+
+    groovy = [
+        version : '3.0.7'
+    ]
+
+    mod = [
+        id : 'groovy-libraries',
+        name : 'Groovy Libraries',
+        version : "${ext.groovy.version}",
+        group : 'com.latibro.groovylibraries'
+    ]
+
+    minecraft = [
+        version : '1.12.2',
+        modloader : [
+            name : 'forge',
+            version : '14.23.5.2778'
+        ],
+        mcp : [
+            mappings : 'snapshot_20171003'
+        ]
+    ]
+
+}

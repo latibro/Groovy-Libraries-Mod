@@ -17,8 +17,10 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'groovy'
 
-version = project.groovyVersion
-archiveAppendix = project.minecraftVersion + "-" + project.mcModloaderName
+apply from: "gradle/properties.gradle"
+
+group = project.ext.mod.group
+version = project.ext.mod.version
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -26,7 +28,7 @@ compileJava {
 }
 
 minecraft {
-    version = project.minecraftVersion + "-" + project.forgeVersion
+    version = "${project.ext.minecraft.version}-${project.ext.minecraft.modloader.version}"
     runDir = "run"
 
     // the mappings can be changed at any time, and must be in the following format.
@@ -34,7 +36,7 @@ minecraft {
     // stable_#            stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // simply re-run your setup task after changing the mappings to update your workspace.
-    mappings = project.mcpMappingsVersion
+    mappings = project.ext.minecraft.mcp.mappings
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
@@ -62,21 +64,21 @@ dependencies {
 
 
     // Groovy
-    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '3.0.7'
-    shadow group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: project.ext.groovy.version
+    shadow group: 'org.codehaus.groovy', name: 'groovy', version: project.ext.groovy.version
 }
 
 processResources {
     // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "version", project.ext.mod.version
+    inputs.property "mcversion", project.ext.minecraft.version
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
         // replace version and mcversion
-        expand 'version': project.version, 'mcversion': project.minecraft.version
+        expand 'version': project.ext.mod.version, 'mcversion': project.ext.minecraft.version
     }
 
     // copy everything else except the mcmod.info
@@ -85,7 +87,42 @@ processResources {
     }
 }
 
+ext.getJarAppendix = {
+    return "${ext.minecraft.version}-${ext.minecraft.modloader.name}"
+}
+
+ext.getJarVersion = {
+    def version
+    if (!project.hasProperty('release') || !project.getProperty('release')) {
+        version = "${project.ext.mod.version}-SNAPSHOT"
+    } else {
+        version = project.ext.mod.version
+        def release = project.getProperty('release')
+        //Validate matching versions, with release starting with v as Github suggest for release tags
+        if ("v${version}" != release) {
+            throw new Exception("Release version '${release}' does not match committed version '${version}'")
+        }
+    }
+    def buildNumber = project.hasProperty('build-number') ? '+' + project.getProperty('build-number') : ''
+    return version + buildNumber
+}
+
+jar {
+    baseName = project.ext.mod.id
+    appendix = project.ext.getJarAppendix()
+    version = project.ext.getJarVersion()
+}
+
+sourceJar {
+    baseName = jar.baseName
+    appendix = jar.appendix
+    version = jar.version
+}
+
 shadowJar {
+    baseName = jar.baseName
+    appendix = jar.appendix
+    version = jar.version
     classifier = ''
     configurations = [project.configurations.shadow]
 }
